@@ -63,13 +63,9 @@ jobs:
             echo "::error::Successfully retrieved the patch."
           fi
 
-          chmod u+r release.patch
-
-          echo "::error::chmod changed."
-
-          grep "$FILE1" < release.patch > diff1.txt
+          grep "$FILE1" release.patch > diff1.txt
           echo "::error::diff1 made."
-          grep "$FILE2" < release.patch > diff2.txt
+          grep "$FILE2" release.patch > diff2.txt
           echo "::error::diff2 made."
           
           if [ -s diff1.txt ]; then
