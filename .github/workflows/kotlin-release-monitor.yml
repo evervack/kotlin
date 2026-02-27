@@ -26,11 +26,7 @@ jobs:
       - name: Read last seen release
         id: last
         run: |
-          if [ -f .github/last_kotlin_release.txt ]; then
-            LAST=$(cat .github/last_kotlin_release.txt)
-          else
-            LAST="v0.0.0"
-          fi
+          LAST=$(cat .github/last_kotlin_release.txt)
           echo "last=$LAST" >> $GITHUB_OUTPUT
 
       - name: Determine if new release
@@ -52,10 +48,15 @@ jobs:
           FILE1=kotlin-native/runtime/src/main/cpp/TypeInfoObjCExportAddition.hpp
           FILE2=kotlin-native/runtime/src/main/cpp/TypeInfo.h
 
-          PATCH=$(curl -s -H "Accept: application/vnd.github.patch" "https://api.github.com/repos/JetBrains/kotlin/compare/$PREV...$CUR")
+          curl -s -H "Accept: application/vnd.github.patch" "https://api.github.com/repos/JetBrains/kotlin/compare/$PREV...$CUR" -o release.patch
 
-          echo $PATCH | grep "$FILE1" > diff1.txt
-          echo $PATCH | grep "$FILE2" > diff2.txt
+          if [ ! -s release.patch ]; then
+            echo "Failed to get the patch"
+            return 1;
+          fi
+
+          grep "$FILE1" < release.patch > diff1.txt
+          grep "$FILE2" < release.patch > diff2.txt
 
           if [ -s diff1.txt ]; then
             echo "file1_changed=true" >> $GITHUB_OUTPUT
@@ -71,7 +72,7 @@ jobs:
           
       - name: Send Slack notification
         run: |
-         RELEASE=${{ steps.api.outputs.latest }}
+          RELEASE=${{ steps.api.outputs.latest }}
           PREV=${{ steps.last.outputs.last }}
           NEW=${{ steps.changed.outputs.new }}
 
