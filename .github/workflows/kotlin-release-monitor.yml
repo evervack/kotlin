@@ -51,8 +51,15 @@ jobs:
           curl -s -H "Accept: application/vnd.github.patch" "https://api.github.com/repos/JetBrains/kotlin/compare/$PREV...$CUR" -o release.patch
 
           if [ ! -s release.patch ]; then
-            echo "Failed to get the patch"
-            return 1;
+            echo "::error::Failed to get the patch. Trying again."
+            PATCH=$(curl -s -H "Accept: application/vnd.github.patch" "https://api.github.com/repos/JetBrains/kotlin/compare/$PREV...$CUR")
+            echo $PATCH > release.patch
+
+            if [ ! -s release.patch ]; then
+              echo "::error::Failed to get the patch again." && exit 42
+            fi
+          else
+            echo "::error::Successfully retrieved the patch."
           fi
 
           grep "$FILE1" < release.patch > diff1.txt
