@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      #- name: Checkout repo
-      #  uses: actions/checkout@v4
-      #  with:
-      #    fetch-depth: 0
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Fetch latest Kotlin release (GitHub API)
         id: api
@@ -25,9 +25,8 @@ jobs:
 
       - name: Read last seen release
         id: last
-        # LAST=$(cat .github/last_kotlin_release.txt)
         run: |
-          LAST=v2.3.0
+          LAST=$(cat .github/last_kotlin_release.txt)
           echo "last=$LAST" >> $GITHUB_OUTPUT
 
       - name: Determine if new release
@@ -59,26 +58,19 @@ jobs:
             if [ ! -s release.patch ]; then
               echo "::error::Failed to get the patch again." && exit 42
             fi
-          else
-            echo "::error::Successfully retrieved the patch."
           fi
 
           if grep "$FILE1" release.patch; then
             echo "file1_changed=true" >> $GITHUB_OUTPUT
-            echo "::error::file1 changed."
           else
             echo "file1_changed=false" >> $GITHUB_OUTPUT
-            echo "::error::file1 not changed."
           fi
           
           if grep "$FILE2" release.patch; then
             echo "file2_changed=true" >> $GITHUB_OUTPUT
-            echo "::error::file2 changed."
           else
             echo "file2_changed=false" >> $GITHUB_OUTPUT
-            echo "::error::file2 not changed."
           fi
-          echo "::error::ending..."
           
       - name: Send Slack notification
         run: |
