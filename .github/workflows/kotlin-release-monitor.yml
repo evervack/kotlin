@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      #- name: Checkout repo
+      #  uses: actions/checkout@v4
+      #  with:
+      #    fetch-depth: 0
 
       - name: Fetch latest Kotlin release (GitHub API)
         id: api
@@ -62,20 +62,31 @@ jobs:
             echo "::error::Successfully retrieved the patch."
           fi
 
-          grep "$FILE1" < release.patch > diff1.txt
-          grep "$FILE2" < release.patch > diff2.txt
+          chmod u+r release.patch
 
+          echo "::error::chmod changed."
+
+          grep "$FILE1" < release.patch > diff1.txt
+          echo "::error::diff1 made."
+          grep "$FILE2" < release.patch > diff2.txt
+          echo "::error::diff2 made."
+          
           if [ -s diff1.txt ]; then
             echo "file1_changed=true" >> $GITHUB_OUTPUT
+            echo "::error::found change 1."
           else
             echo "file1_changed=false" >> $GITHUB_OUTPUT
+            echo "::error::found no change 1."
           fi
 
           if [ -s diff2.txt ]; then
             echo "file2_changed=true" >> $GITHUB_OUTPUT
+            echo "::error::found change 2."
           else
             echo "file2_changed=false" >> $GITHUB_OUTPUT
+            echo "::error::found no change 2."
           fi
+          echo "::error::ending..."
           
       - name: Send Slack notification
         run: |
