@@ -52,8 +52,10 @@ jobs:
           FILE1=kotlin-native/runtime/src/main/cpp/TypeInfoObjCExportAddition.hpp
           FILE2=kotlin-native/runtime/src/main/cpp/TypeInfo.h
 
-          git diff "$PREV" "$CUR" -- $FILE1 > diff1.txt
-          git diff "$PREV" "$CUR" -- $FILE2 > diff2.txt
+          PATCH=$(curl -s -H "Accept: application/vnd.github.patch" "https://api.github.com/repos/JetBrains/kotlin/compare/$PREV...$CUR")
+
+          echo $PATCH | grep "$FILE1" > diff1.txt
+          echo $PATCH | grep "$FILE2" > diff2.txt
 
           if [ -s diff1.txt ]; then
             echo "file1_changed=true" >> $GITHUB_OUTPUT
