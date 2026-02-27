@@ -25,8 +25,9 @@ jobs:
 
       - name: Read last seen release
         id: last
+        # LAST=$(cat .github/last_kotlin_release.txt)
         run: |
-          LAST=$(cat .github/last_kotlin_release.txt)
+          LAST=v2.3.0
           echo "last=$LAST" >> $GITHUB_OUTPUT
 
       - name: Determine if new release
