@@ -1,0 +1,54 @@
+name: Kotlin Release Monitor
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  check-file:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout released tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+
+      - name: Fetch all tags
+        run: git fetch --tags --force
+
+      - name: Determine previous tag
+        id: previous
+        run: |
+          PREV_TAG=$(git tag --sort=-creatordate | grep -A1 ${{ github.event.release.tag_name }} | tail -n1)
+          echo "prev_tag=$PREV_TAG" >> $GITHUB_OUTPUT
+
+      - name: Compare metadata file
+        id: diffcheck
+        run: |
+          FILE_PATH=kotlin-native/runtime/src/main/cpp/TypeInfoObjCExportAddition.hpp
+
+          git diff ${{ steps.previous.outputs.prev_tag }} ${{ github.event.release.tag_name }} -- $FILE_PATH > diff.txt
+
+          if [ -s diff.txt ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send Slack notification
+        run: |
+          RELEASE=${{ github.event.release.tag_name }}
+          PREV=${{ steps.previous.outputs.prev_tag }}
+          CHANGED=${{ steps.diffcheck.outputs.changed }}
+
+          if [ "$CHANGED" = "true" ]; then
+            MESSAGE="⚠️ Kotlin release $RELEASE published. Metadata file changed compared to $PREV."
+          else
+            MESSAGE="✅ Kotlin release $RELEASE published. No changes detected in metadata compared to $PREV."
+          fi
+
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{\"text\": \"$MESSAGE\"}" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
