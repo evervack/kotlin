@@ -27,26 +27,43 @@ jobs:
       - name: Compare metadata file
         id: diffcheck
         run: |
-          FILE_PATH=kotlin-native/runtime/src/main/cpp/TypeInfoObjCExportAddition.hpp
+          FILE1=kotlin-native/runtime/src/main/cpp/TypeInfoObjCExportAddition.hpp
+          FILE2=kotlin-native/runtime/src/main/cpp/TypeInfo.h
 
-          git diff ${{ steps.previous.outputs.prev_tag }} ${{ github.event.release.tag_name }} -- $FILE_PATH > diff.txt
+          git diff ${{ steps.previous.outputs.prev_tag }} ${{ github.event.release.tag_name }} -- $FILE1 > diff1.txt
+          git diff ${{ steps.previous.outputs.prev_tag }} ${{ github.event.release.tag_name }} -- $FILE2 > diff2.txt
 
-          if [ -s diff.txt ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
+          if [ -s diff1.txt ]; then
+            echo "file1_changed=true" >> $GITHUB_OUTPUT
           else
-            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "file1_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+          if [ -s diff2.txt ]; then
+            echo "file2_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "file2_changed=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Send Slack notification
         run: |
           RELEASE=${{ github.event.release.tag_name }}
           PREV=${{ steps.previous.outputs.prev_tag }}
-          CHANGED=${{ steps.diffcheck.outputs.changed }}
+          F1=${{ steps.diffcheck.outputs.file1_changed }}
+          F2=${{ steps.diffcheck.outputs.file2_changed }}
 
-          if [ "$CHANGED" = "true" ]; then
-            MESSAGE="⚠️ Kotlin release $RELEASE published. Metadata file changed compared to $PREV."
+          MESSAGE="📦 Kotlin release $RELEASE published (compared to $PREV).\n\n"
+
+          if [ "$F1" = "true" ]; then
+            MESSAGE+="⚠️ TypeInfoObjCExportAddition.hpp changed.\n"
           else
-            MESSAGE="✅ Kotlin release $RELEASE published. No changes detected in metadata compared to $PREV."
+            MESSAGE+="✅ TypeInfoObjCExportAddition.hpp unchanged.\n"
+          fi
+
+          if [ "$F2" = "true" ]; then
+            MESSAGE+="⚠️ TypeInfo.h changed.\n"
+          else
+            MESSAGE+="✅ TypeInfo.h unchanged.\n"
           fi
 
           curl -X POST -H 'Content-type: application/json' \
