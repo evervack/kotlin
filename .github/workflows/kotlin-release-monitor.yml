@@ -63,25 +63,20 @@ jobs:
             echo "::error::Successfully retrieved the patch."
           fi
 
-          grep "$FILE1" release.patch > diff1.txt
-          echo "::error::diff1 made."
-          grep "$FILE2" release.patch > diff2.txt
-          echo "::error::diff2 made."
-          
-          if [ -s diff1.txt ]; then
+          if grep "$FILE1" release.patch; then
             echo "file1_changed=true" >> $GITHUB_OUTPUT
-            echo "::error::found change 1."
+            echo "::error::file1 changed."
           else
             echo "file1_changed=false" >> $GITHUB_OUTPUT
-            echo "::error::found no change 1."
+            echo "::error::file1 not changed."
           fi
-
-          if [ -s diff2.txt ]; then
+          
+          if grep "$FILE2" release.patch; then
             echo "file2_changed=true" >> $GITHUB_OUTPUT
-            echo "::error::found change 2."
+            echo "::error::file2 changed."
           else
             echo "file2_changed=false" >> $GITHUB_OUTPUT
-            echo "::error::found no change 2."
+            echo "::error::file2 not changed."
           fi
           echo "::error::ending..."
           
