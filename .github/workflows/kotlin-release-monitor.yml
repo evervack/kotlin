@@ -73,31 +73,26 @@ jobs:
           fi
           
       - name: Send Slack notification
+        if: steps.changed.outputs.new == 'true'
         run: |
           RELEASE=${{ steps.api.outputs.latest }}
           PREV=${{ steps.last.outputs.last }}
-          NEW=${{ steps.changed.outputs.new }}
 
-          if [ "$NEW" = "true" ]; then
-            F1=${{ steps.diffs.outputs.file1_changed }}
-            F2=${{ steps.diffs.outputs.file2_changed }}
+          F1=${{ steps.diffs.outputs.file1_changed }}
+          F2=${{ steps.diffs.outputs.file2_changed }}
   
-            MESSAGE="📦 Kotlin release detected: $RELEASE (previous $PREV).\n\n"
+          MESSAGE="📦 Kotlin release detected: $RELEASE (previous $PREV).\n\n"
 
-            if [ "$F1" = "true" ]; then
-              MESSAGE+="⚠️ TypeInfoObjCExportAddition.hpp changed.\n"
-            else
-              MESSAGE+="✅ TypeInfoObjCExportAddition.hpp unchanged.\n"
-            fi
-  
-            if [ "$F2" = "true" ]; then
-              MESSAGE+="⚠️ TypeInfo.h changed.\n"
-            else
-              MESSAGE+="✅ TypeInfo.h unchanged.\n"
-            fi
-
+          if [ "$F1" = "true" ]; then
+            MESSAGE+="⚠️ TypeInfoObjCExportAddition.hpp changed.\n"
           else
-            MESSAGE="📦 Kotlin release checked: $PREV (no new release)."
+            MESSAGE+="✅ TypeInfoObjCExportAddition.hpp unchanged.\n"
+          fi
+
+          if [ "$F2" = "true" ]; then
+            MESSAGE+="⚠️ TypeInfo.h changed.\n"
+          else
+            MESSAGE+="✅ TypeInfo.h unchanged.\n"
           fi
 
           curl -X POST -H 'Content-type: application/json' \
